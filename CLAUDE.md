@@ -6,11 +6,20 @@ Claude Code releases for red-run impact.
 ## Trigger behavior
 
 On each run:
-1. Fetch `https://api.github.com/repos/anthropics/claude-code/releases?per_page=10`
-2. Read the latest report in `reports/` to determine last-reviewed version
-3. For new releases: summarize changes and analyze red-run impact
-4. Write report to `reports/YYYY-MM-DD.md`
-5. Commit and push
+1. Read the most recent report in `reports/` (sort by filename, newest first).
+   Extract the version numbers from the "New Releases Reviewed" section —
+   these are the already-reviewed versions. If no reports exist, treat all
+   releases as new.
+2. Fetch releases via `gh api repos/anthropics/claude-code/releases --paginate -q '.[:10]'`
+   (use `gh api` not WebFetch — it's authenticated and returns structured JSON).
+3. Filter out any release whose `tag_name` appears in any existing report's
+   "New Releases Reviewed" list. Only analyze genuinely new releases.
+4. If no new releases: print "No new Claude Code releases since vX.Y.Z" and stop.
+   Do NOT create an empty report. Do NOT commit.
+5. For new releases: summarize changes and analyze red-run impact.
+6. Write report to `reports/YYYY-MM-DD.md`. If a report for today already
+   exists (multiple runs same day), append a suffix: `YYYY-MM-DD-2.md`.
+7. Commit and push.
 
 ## Report format
 
